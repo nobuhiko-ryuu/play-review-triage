@@ -27,12 +27,14 @@ fun SignInScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    val launcher = rememberLauncherForActivityResult(
+    // Google アカウント選択後の結果処理
+    val signInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             try {
-                val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
+                val account = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                    .getResult(ApiException::class.java)
                 val accountName = account.account?.name
                 if (accountName != null) {
                     viewModel.completeSignIn(accountName)
@@ -44,6 +46,24 @@ fun SignInScreen(
             }
         } else {
             viewModel.onSignInFailed()
+        }
+    }
+
+    // スコープ未許可時のリカバリダイアログ結果処理
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.retryAfterPermissionGrant()
+        } else {
+            viewModel.onSignInFailed()
+        }
+    }
+
+    // recoveryIntent が来たらリカバリダイアログを起動
+    LaunchedEffect(Unit) {
+        viewModel.recoveryIntent.collect { intent ->
+            permissionLauncher.launch(intent)
         }
     }
 
@@ -81,7 +101,10 @@ fun SignInScreen(
                         .requestEmail()
                         .build()
                     val signInClient = GoogleSignIn.getClient(context, gso)
-                    launcher.launch(signInClient.signInIntent)
+                    // 前回のセッションをクリアしてアカウント選択画面を強制表示
+                    signInClient.signOut().addOnCompleteListener {
+                        signInLauncher.launch(signInClient.signInIntent)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = uiState !is SignInUiState.Loading,

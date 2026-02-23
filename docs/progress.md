@@ -1,6 +1,7 @@
 # 進捗状況：Play Review Triage
-最終更新: 2026-02-23
+最終更新: 2026-02-24
 プロジェクト: `C:\Users\my\claude_code\Projects\Play Review Triage`
+GitHub: https://github.com/nobuhiko-ryuu/play-review-triage（Public）
 
 ---
 
@@ -21,107 +22,99 @@
 
 ### 実行フェーズ
 ```
-Phase 1（Team Lead単独）
-  ├─ Gradle設定 / build variant / 依存ライブラリ追加
-  ├─ Hilt初期化（App.kt / di/ module群）
-  ├─ Navigation骨格（NavRoutes / AppNavHost）
-  └─ Domain interfaces・AppError・Result型を確定（他エージェントへの入力）
-
-Phase 2（3エージェント並列）
-  ├─ Domain Agent: Entity / UseCase / TriageEngineV1 実装 + 単体テスト
-  ├─ Data Agent: Room / Retrofit / DataStore / Mapper 実装
-  └─ UI Agent: 5画面Compose UIをモックデータで先行実装
-
-Phase 3（統合）
-  └─ Team Leadが各層を結合・DailySyncWorker組み込み・E2E確認
+Phase 1（Team Lead単独）      ✅ 完了
+Phase 2（3エージェント並列）   ✅ 完了
+Phase 3（統合・品質確認）      🔄 進行中
 ```
 
 ---
 
 ## 実施済み
 
-### セッション 1（2026-02-22）
-- [x] docsフォルダ内の全ドキュメントを読み込み、開発内容を把握
-- [x] Teams構成を検討し、案A（レイヤー分割型 4エージェント）をユーザーが採用決定
-- [x] `progress.md`（本ファイル）を作成
-- [x] パッケージ名を `app.playreviewtriage` に決定・変更
-- [x] Android Studioでプロジェクト雛形作成（ユーザー実施）
-- [x] **Phase 1（Team Lead）完了** — 以下をすべて実装
-  - `gradle/libs.versions.toml`：全依存ライブラリ・バージョン追加
-  - `build.gradle.kts`（root）：Hilt・KSPプラグイン追加
-  - `app/build.gradle.kts`：全プラグイン・依存・build variant（debug/internal/release）追加
-  - `AndroidManifest.xml`：INTERNET / POST_NOTIFICATIONS権限 / WorkManager初期化無効化
-  - `App.kt`：@HiltAndroidApp + HiltWorkerFactory設定
-  - `core/result/AppError.kt` / `AppException.kt`
-  - `core/time/Clock.kt`：Clock interface + SystemClock実装
-  - `domain/entity/`：Importance / ReasonTag / Review / AppConfig / SyncSummary
-  - `domain/repository/`：AuthRepository / ConfigRepository / ReviewRepository（interface）
-  - `ui/navigation/NavRoutes.kt` / `AppNavHost.kt`（骨格）
-  - `di/AppModule.kt` / `NetworkModule.kt` / `DatabaseModule.kt` / `WorkerModule.kt`（骨格）
-  - `MainActivity.kt`
+### Phase 1（Team Lead）— 完了
+- Gradle設定 / build variant（debug/internal/release）/ 全依存ライブラリ
+- Hilt初期化（App.kt / di/ module群）
+- Navigation骨格（NavRoutes / AppNavHost）
+- Domain interfaces・AppError・Result型
 
-### セッション 2（2026-02-22〜23）
-- [x] **Phase 2 Domain Agent 完了**
-  - `domain/triage/`：TriageEngine / TriageResult / RuleBasedTriageEngineV1
-  - `domain/usecase/`：LoadStartupRouteUseCase（StartupRoute sealed class含む）/ SetPackageNameUseCase / SyncReviewsUseCase / GetTop3UseCase / GetReviewDetailUseCase / ScheduleDailySyncUseCase / RunDailySyncUseCase
-  - Unit test 2ファイル
-- [x] **Phase 2 Data Agent 完了**（トークン切れ後に手動で補完）
-  - `data/api/service/PublisherService.kt`
-  - `data/api/dto/ReviewsDto.kt`
-  - `data/api/mapper/ReviewDtoMapper.kt`
-  - `data/api/interceptor/AuthInterceptor.kt`
-  - `data/api/ErrorMapper.kt`
-  - `data/db/AppDatabase.kt` / `ReviewDao.kt` / `ReviewEntity.kt` / `ReviewEntityMapper.kt`
-  - `data/prefs/datastore/TokenStore.kt` / `SettingsStore.kt`
-  - `data/repository/AuthRepositoryImpl.kt` / `ConfigRepositoryImpl.kt` / `ReviewRepositoryImpl.kt`
-- [x] **Phase 2 UI Agent 完了**（トークン切れ後に手動で補完）
-  - `ui/component/`：LoadingView / ErrorView / EmptyView
-  - `presentation/uistate/`：SignInUiState / SetupUiState / TodayUiState / DetailUiState / SettingsUiState
-  - `presentation/viewmodel/`：MainViewModel / SignInViewModel / SetupViewModel / TodayViewModel / DetailViewModel / SettingsViewModel
-  - `ui/screen/signin/SignInScreen.kt`
-  - `ui/screen/setup/SetupScreen.kt`
-  - `ui/screen/today/TodayScreen.kt`
-  - `ui/screen/detail/ReviewDetailScreen.kt`
-  - `ui/screen/settings/SettingsScreen.kt`
-  - `worker/DailySyncWorker.kt`
-- [x] **DIモジュール補完**
-  - `di/DatabaseModule.kt`：Room.databaseBuilder + provideReviewDao 完成
-  - `di/NetworkModule.kt`：AuthInterceptor + PublisherService 追加
-  - `di/RepositoryModule.kt`：新規作成（全リポジトリ・TriageEngine バインド）
-- [x] **AppNavHost.kt 更新**：PlaceholderScreen → 実スクリーンに差し替え + MainViewModel連携
+### Phase 2（並列エージェント）— 完了
+- **Domain Agent**：TriageEngine / TriageResult / RuleBasedTriageEngineV1 / UseCase 7本 / Unit test 2本
+- **Data Agent**：Retrofit（PublisherService）/ Room / DataStore（TokenStore・SettingsStore）/ Mapper / ErrorMapper / Repository 実装3本
+- **UI Agent**：Compose 5画面 / ViewModel 6本 / UiState 5本 / Component 3本 / DailySyncWorker
+- **手動補完**：DIモジュール完成・AppNavHost 実スクリーン差し替え・MainViewModel
+
+### Phase 3（統合・品質確認）— 進行中
+
+#### セッション 3（2026-02-23〜24）
+- [x] **Google Sign-In 実装**（`play-services-auth 21.3.0`）
+  - `AuthRepository.completeSignIn(accountName)` インターフェース化
+  - `AuthRepositoryImpl`：`GoogleAuthUtil.getToken()` でアクセストークン取得・DataStore保存
+  - `SignInScreen`：`ActivityResultLauncher` でアカウント選択画面起動
+  - `UserRecoverableAuthException` 対応：リカバリIntent を自動起動して許可後にリトライ
+  - `signInClient.signOut()` で前回キャッシュをクリアしてアカウント選択を強制表示
+- [x] **Google Cloud Console / OAuth 設定**（ユーザー実施）
+  - OAuth クライアントID（Android）作成・SHA-1登録
+  - `google-services.json` を `app/` 直下に配置
+  - `google-services` プラグイン（4.4.2）追加
+  - OAuth同意画面：外部・テストユーザーに自アカウント追加
+- [x] **GitHub リポジトリ作成・構成管理開始**
+  - `git init` → 初回コミット（112ファイル）→ GitHub push
+  - `.gitignore` 整備（`local.properties` / `build/` / `google-services.json` 除外）
+- [x] **バグ修正・品質改善**
+  - `AuthRepositoryImpl.isSignedIn()`：suspend関数の不正呼び出しを `runBlocking` で修正
+  - `SetPackageNameUseCase`：パッケージ名バリデーション強化（ドット区切り2セグメント以上必須）
+  - `ErrorMapper`：404 → 「アプリが見つかりません」メッセージ追加
+  - `TodayViewModel`：`AppError.Unknown.message` を画面に表示するよう修正
+  - `DatabaseModule`：`fallbackToDestructiveMigration(dropAllTables = true)` deprecation 修正
+  - `TokenStore.saveToken()` の `expiryEpochSec` 引数欠落を修正
+- [x] **Fake Data Mode 実装**（internal ビルド用）
+  - `BuildConfig.USE_FAKE_DATA`（internal=true / debug・release=false）
+  - `FakeAuthRepository`：常にサインイン済み・トークン固定
+  - `FakeReviewRepository`：HIGH×2・MID×2・LOW×1 の5件をシード、sync()で1件追加
+  - `RepositoryModule`：`@Provides` でフラグに応じて Real/Fake を切り替え
+- [x] **認証の実機動作確認**（internalビルドでの全画面確認は未完）
+  - アカウント選択画面表示 ✅
+  - テストユーザー追加後に OAuth 通過 ✅
 
 ---
 
 ## 残タスク
 
-### Phase 3（統合）— **次のステップ**
-- [ ] Gradle sync + ビルド確認（コンパイルエラーがないか検証）
-- [ ] 導線テスト（SignIn → Setup → Today → Detail → Settings）
-- [ ] エラー表示確認（401 / 403 / ネットワークエラー）
-- [ ] Google OAuth の実装（`AuthRepositoryImpl.signIn()` が現在スタブ）
-  - Credential Manager または `play-services-auth` を使った実装
-- [ ] Internal testing ビルド確認
-- [ ] CI設定（`.github/workflows/ci.yml`）
+### 即時対応
+- [ ] **internal ビルドでの UI 全画面確認**（Fake Data Mode を使って実施）
+  - Setup：バリデーションエラー表示・正常保存・Today 遷移
+  - Today：Top3 表示・更新ボタン・空状態・エラー状態
+  - Detail：レビュー詳細・タグ・デバイス情報・Play Console ボタン
+  - Settings：パッケージ名表示・ログアウトダイアログ
+
+### Phase 3 残作業
+- [ ] **DailySyncWorker の動作確認**（WorkManager スケジューリング）
+- [ ] **CI設定**（`.github/workflows/ci.yml`）：Unit test の自動実行
+- [ ] **実 API E2E テスト**（自アプリを Play Console に登録後に実施）
+  - 401 / 403 / 404 / ネットワークエラーの各エラー表示確認
+
+### 将来対応（MVP後）
+- [ ] `GoogleSignIn` / `GoogleSignInOptions` deprecation 対応（Credential Manager への移行）
+- [ ] Encrypted DataStore 移行（現在は平文 DataStore）
+- [ ] Firebase / Crashlytics 導入（`google-services.json` の本番設定が必要）
+- [ ] トークン自動更新（現在は `GoogleAuthUtil.getToken()` が都度更新。期限切れ時の UX 改善）
 
 ---
 
 ## 未解決の問題・確認事項
 
-1. **Google OAuth クライアントID**
-   → Google Cloud Console での設定が必要（`google-services.json` は別途ユーザーが取得）
-   → `AuthRepositoryImpl.signIn()` は現在 `TODO: Google Sign-In` スタブ。Phase 3で実装予定。
+1. **実 API テストは自アプリ公開後**
+   → Play Console にアプリが登録されるまで Fake Data Mode で品質確認を継続
 
-2. **Firebase / Crashlytics 設定**
-   → `google-services.json` が必要。エージェントはFirebase SDKの追加とコード実装のみ担当
-   → 実際のプロジェクト接続はユーザーが別途行う
+2. **Firebase / Crashlytics**
+   → `google-services.json` の本番接続はユーザー作業。未着手。
 
-3. **Android Publisher API スコープ確認**
-   → `https://www.googleapis.com/auth/androidpublisher` を使用予定
-   → Play ConsoleでのAPIアクセス権設定はユーザー側作業
+3. **`GoogleSignIn` 系 API の deprecation 警告**
+   → ビルドは通る。`play-services-auth 21.x` で deprecated。MVP 後に Credential Manager へ移行予定。
 
 ---
 
-## 参照ドキュメント（実装時に参照すべきもの）
+## 参照ドキュメント
 
 | ドキュメント | 参照タイミング |
 |---|---|
@@ -136,9 +129,11 @@ Phase 3（統合）
 ## メモ・決定事項
 
 - **MVPはサーバレス（端末完結）**：レビュー本文・トークンの外部送信は禁止
-- **Domain層はAndroid依存禁止**（純Kotlin）
+- **Domain層はAndroid依存禁止**（純Kotlin）。ただし `AuthRepository.consumeRecoveryIntent()` のみ MVP 妥協として `android.content.Intent` を返す
 - **トークン保存**：MVP段階はDataStoreで可（β前にEncrypted DataStore検討）
 - **WorkManagerの精度**：「だいたい9:00頃」で許容
 - **Top3選定ロジック**：HIGH（新しい順）→ MID（新しい順）補完、LOWは原則除外
-- **AuthInterceptor**：runBlockingでDataStore読み取り（MVP許容、必要に応じてキャッシュ化）
+- **AuthInterceptor**：runBlockingでDataStore読み取り（MVP許容）
+- **Fake Data Mode**：`internal` ビルドで `BuildConfig.USE_FAKE_DATA=true`。`FakeAuthRepository` + `FakeReviewRepository` で API・認証をスタブ化
+- **パッケージ名バリデーション**：`^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$`（ドット区切り2セグメント以上必須）
 - **Hilt deprecation note**：hiltJavaCompileDebugで出るConfiguration.Provider deprecation警告は自動生成コードによるもの。修正不要。

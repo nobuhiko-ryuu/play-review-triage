@@ -10,11 +10,12 @@ class SetPackageNameUseCase @Inject constructor(
         if (packageName.isBlank()) {
             return Result.failure(IllegalArgumentException("Package name must not be blank."))
         }
-        val pattern = Regex("^[a-zA-Z0-9_.]+$")
+        // Androidパッケージ名は「英数字・_・.」のみ、かつドットで区切られた2セグメント以上必要
+        val pattern = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
         if (!pattern.matches(packageName)) {
             return Result.failure(
                 IllegalArgumentException(
-                    "Package name must match ^[a-zA-Z0-9_.]+\$. Got: \"$packageName\""
+                    "正しいパッケージ名を入力してください（例: com.example.app）"
                 )
             )
         }

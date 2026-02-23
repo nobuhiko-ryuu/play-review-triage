@@ -67,5 +67,5 @@ private fun app.playreviewtriage.core.result.AppError.toUserMessage(): String = 
     app.playreviewtriage.core.result.AppError.Forbidden -> "このアカウントは対象アプリにアクセスできません。"
     app.playreviewtriage.core.result.AppError.Network -> "通信できませんでした。電波状況を確認して再試行してください。"
     app.playreviewtriage.core.result.AppError.RateLimited -> "リクエストが多すぎます。しばらくしてから再試行してください。"
-    is app.playreviewtriage.core.result.AppError.Unknown -> "予期しないエラーが発生しました。"
+    is app.playreviewtriage.core.result.AppError.Unknown -> message ?: "予期しないエラーが発生しました。"
 }

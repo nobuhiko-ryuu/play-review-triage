@@ -24,9 +24,11 @@ android {
     buildTypes {
         debug {
             isMinifyEnabled = false
+            buildConfigField("Boolean", "USE_FAKE_DATA", "false")
         }
         release {
             isMinifyEnabled = true
+            buildConfigField("Boolean", "USE_FAKE_DATA", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -36,6 +38,7 @@ android {
             initWith(getByName("debug"))
             isMinifyEnabled = false
             matchingFallbacks += listOf("debug")
+            buildConfigField("Boolean", "USE_FAKE_DATA", "true")
         }
     }
     compileOptions {
@@ -47,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

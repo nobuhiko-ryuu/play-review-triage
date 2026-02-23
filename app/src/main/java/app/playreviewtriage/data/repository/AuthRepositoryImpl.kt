@@ -23,6 +23,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val tokenStore: TokenStore,
 ) : AuthRepository {
 
+    private var pendingRecoveryIntent: android.content.Intent? = null
+
     companion object {
         private const val PUBLISHER_SCOPE =
             "oauth2:https://www.googleapis.com/auth/androidpublisher"
@@ -38,6 +40,7 @@ class AuthRepositoryImpl @Inject constructor(
                 tokenStore.saveToken(token, expiryEpochSec)
                 Result.success(Unit)
             } catch (e: UserRecoverableAuthException) {
+                pendingRecoveryIntent = e.intent
                 AppError.AuthExpired.toFailure()
             } catch (e: GoogleAuthException) {
                 AppError.Forbidden.toFailure()
@@ -45,6 +48,9 @@ class AuthRepositoryImpl @Inject constructor(
                 AppError.Network.toFailure()
             }
         }
+
+    override fun consumeRecoveryIntent(): android.content.Intent? =
+        pendingRecoveryIntent.also { pendingRecoveryIntent = null }
 
     override suspend fun signOut() {
         tokenStore.clearToken()
