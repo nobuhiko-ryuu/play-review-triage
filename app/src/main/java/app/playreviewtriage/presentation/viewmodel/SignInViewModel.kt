@@ -2,6 +2,7 @@ package app.playreviewtriage.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.playreviewtriage.core.result.AppError
 import app.playreviewtriage.core.result.AppException
 import app.playreviewtriage.domain.repository.AuthRepository
 import app.playreviewtriage.presentation.uistate.SignInUiState
@@ -20,10 +21,11 @@ class SignInViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<SignInUiState>(SignInUiState.Idle)
     val uiState: StateFlow<SignInUiState> = _uiState.asStateFlow()
 
-    fun signIn() {
+    /** Google Sign-In で取得したアカウント名を受け取り、サインインを完了する */
+    fun completeSignIn(accountName: String) {
         viewModelScope.launch {
             _uiState.value = SignInUiState.Loading
-            val result = authRepository.signIn()
+            val result = authRepository.completeSignIn(accountName)
             _uiState.value = result.fold(
                 onSuccess = { SignInUiState.Success },
                 onFailure = { e ->
@@ -34,15 +36,19 @@ class SignInViewModel @Inject constructor(
         }
     }
 
+    fun onSignInFailed() {
+        _uiState.value = SignInUiState.Error("Googleアカウントの選択がキャンセルされました。")
+    }
+
     fun resetState() {
         _uiState.value = SignInUiState.Idle
     }
 }
 
-private fun app.playreviewtriage.core.result.AppError.toUserMessage(): String = when (this) {
-    app.playreviewtriage.core.result.AppError.AuthExpired -> "認証が期限切れです。再ログインしてください。"
-    app.playreviewtriage.core.result.AppError.Forbidden -> "このアカウントは対象アプリにアクセスできません。"
-    app.playreviewtriage.core.result.AppError.Network -> "通信できませんでした。電波状況を確認して再試行してください。"
-    app.playreviewtriage.core.result.AppError.RateLimited -> "リクエストが多すぎます。しばらくしてから再試行してください。"
-    is app.playreviewtriage.core.result.AppError.Unknown -> "予期しないエラーが発生しました。しばらくしてから再試行してください。"
+private fun AppError.toUserMessage(): String = when (this) {
+    AppError.AuthExpired -> "認証が期限切れです。再ログインしてください。"
+    AppError.Forbidden -> "このアカウントは対象アプリにアクセスできません。"
+    AppError.Network -> "通信できませんでした。電波状況を確認して再試行してください。"
+    AppError.RateLimited -> "リクエストが多すぎます。しばらくしてから再試行してください。"
+    is AppError.Unknown -> "予期しないエラーが発生しました。しばらくしてから再試行してください。"
 }

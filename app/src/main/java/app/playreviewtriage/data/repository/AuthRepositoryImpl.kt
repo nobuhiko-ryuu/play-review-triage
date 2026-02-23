@@ -1,30 +1,50 @@
 package app.playreviewtriage.data.repository
 
+import android.accounts.Account
+import android.content.Context
+import app.playreviewtriage.core.result.AppError
+import app.playreviewtriage.core.result.toFailure
 import app.playreviewtriage.data.prefs.datastore.TokenStore
 import app.playreviewtriage.domain.repository.AuthRepository
+import com.google.android.gms.auth.GoogleAuthException
+import com.google.android.gms.auth.GoogleAuthUtil
+import com.google.android.gms.auth.UserRecoverableAuthException
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * AuthRepository の実装。
- *
- * signIn() は現時点ではスタブ実装。
- * 実際の Google Sign-In には play-services-auth または Credential Manager の追加が必要。
- */
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val tokenStore: TokenStore,
 ) : AuthRepository {
 
-    /**
-     * TODO: Google Sign-In の実際の実装は別途追加が必要。
-     * play-services-auth または Credential Manager の依存関係を追加し、
-     * 取得したトークンを tokenStore.saveToken() で保存すること。
-     */
-    override suspend fun signIn(): Result<Unit> =
-        Result.failure(NotImplementedError("Google Sign-In の実装が必要です。play-services-auth または Credential Manager の追加が必要です。"))
+    companion object {
+        private const val PUBLISHER_SCOPE =
+            "oauth2:https://www.googleapis.com/auth/androidpublisher"
+    }
+
+    override suspend fun completeSignIn(accountName: String): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            try {
+                val account = Account(accountName, "com.google")
+                val token = GoogleAuthUtil.getToken(context, account, PUBLISHER_SCOPE)
+                // Google OAuth2 アクセストークンの有効期限は通常 3600 秒
+                val expiryEpochSec = System.currentTimeMillis() / 1000 + 3600L
+                tokenStore.saveToken(token, expiryEpochSec)
+                Result.success(Unit)
+            } catch (e: UserRecoverableAuthException) {
+                AppError.AuthExpired.toFailure()
+            } catch (e: GoogleAuthException) {
+                AppError.Forbidden.toFailure()
+            } catch (e: Exception) {
+                AppError.Network.toFailure()
+            }
+        }
 
     override suspend fun signOut() {
         tokenStore.clearToken()
