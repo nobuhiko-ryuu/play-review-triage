@@ -29,10 +29,20 @@ class SetupViewModel @Inject constructor(
                 onSuccess = { SetupUiState.Success },
                 onFailure = { e ->
                     when {
-                        e is AppException && e.error == AppError.Forbidden ->
-                            SetupUiState.ApiError("このアカウントは対象アプリにアクセスできません。\nPlay Consoleで権限を確認するか、別アカウントでログインしてください。")
                         e is IllegalArgumentException ->
                             SetupUiState.ValidationError(e.message ?: "入力値が正しくありません。")
+                        e is AppException -> when (e.error) {
+                            AppError.AuthExpired ->
+                                SetupUiState.ApiError("認証が切れています。ログアウトして再度サインインしてください。")
+                            AppError.Forbidden ->
+                                SetupUiState.ApiError("このアカウントは対象アプリにアクセスできません。\nPlay Consoleで権限を確認してください。")
+                            AppError.Network ->
+                                SetupUiState.ApiError("通信エラーが発生しました。ネットワーク接続を確認してください。")
+                            AppError.RateLimited ->
+                                SetupUiState.ApiError("リクエスト制限に達しました。しばらく待ってから再試行してください。")
+                            is AppError.Unknown ->
+                                SetupUiState.ApiError(e.error.message ?: "予期しないエラーが発生しました。")
+                        }
                         else -> SetupUiState.ApiError("予期しないエラーが発生しました。")
                     }
                 },
