@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.playreviewtriage.presentation.viewmodel.SettingsViewModel
+import app.playreviewtriage.ui.component.InspectionPanel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +78,8 @@ fun SettingsScreen(
             }
 
             HorizontalDivider()
+
+            InspectionPanel()
 
             Text(
                 "レビューは端末内に最大${uiState.retentionDays}日間保存されます。",
