@@ -3,8 +3,20 @@ name: CI
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'app/src/**'
+      - 'app/build.gradle.kts'
+      - 'build.gradle.kts'
+      - 'gradle/**'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'app/src/**'
+      - 'app/build.gradle.kts'
+      - 'build.gradle.kts'
+      - 'gradle/**'
+      - '.github/workflows/ci.yml'
 
 jobs:
   unit-test:
@@ -20,9 +32,12 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
 
       - name: Create dummy google-services.json
         run: |
@@ -59,11 +74,12 @@ jobs:
           EOF
 
       - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest --stacktrace
+        run: ./gradlew testDebugUnitTest --build-cache --parallel --quiet
 
       - name: Upload Test Results
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: app/build/reports/tests/testDebugUnitTest/
+          retention-days: 7
