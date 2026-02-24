@@ -10,41 +10,59 @@ import app.playreviewtriage.domain.repository.ReviewRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Fake実装：internal ビルド (USE_FAKE_DATA=true) 用。
- * Play Console API を呼ばずにハードコードのレビューを返す。
- */
 @Singleton
-class FakeReviewRepository @Inject constructor() : ReviewRepository {
+class FakeReviewRepository @Inject constructor(
+    private val testStore: InternalTestStore,
+) : ReviewRepository {
 
     private val _reviews = MutableStateFlow(SEED_REVIEWS)
-
     override val reviewsFlow: Flow<List<Review>> = _reviews.asStateFlow()
 
+    override suspend fun checkAccess(packageName: String): Result<Unit> =
+        when (testStore.scenario.first()) {
+            FakeScenario.AUTH_401      -> AppError.AuthExpired.toFailure()
+            FakeScenario.FORBIDDEN_403 -> AppError.Forbidden.toFailure()
+            FakeScenario.NETWORK_ERROR -> AppError.Network.toFailure()
+            FakeScenario.RATE_LIMIT    -> AppError.RateLimited.toFailure()
+            else                       -> Result.success(Unit)
+        }
+
     override suspend fun syncNow(packageName: String): Result<SyncSummary> {
-        // 同期ごとに新しいレビューを1件追加してUIの変化を確認できるようにする
-        val current = _reviews.value.toMutableList()
-        current.add(
-            Review(
-                reviewId = "fake-new-${System.currentTimeMillis()}",
-                authorName = "新規ユーザー",
-                starRating = 2,
-                text = "アップデートしたら動作が重くなりました。改善をお願いします。",
-                lastModifiedEpochSec = System.currentTimeMillis() / 1000,
-                appVersionName = "2.1.0",
-                androidOsVersion = 14,
-                deviceManufacturer = "Google",
-                deviceModel = "Pixel 8",
-                importance = Importance.MID,
-                reasonTags = setOf(ReasonTag.UI),
-                fetchedAtEpochSec = System.currentTimeMillis() / 1000,
-            )
-        )
-        _reviews.value = current
-        return Result.success(SyncSummary(fetchedCount = 1, highCount = 0))
+        return when (testStore.scenario.first()) {
+            FakeScenario.SUCCESS -> {
+                val current = _reviews.value.toMutableList()
+                current.add(
+                    Review(
+                        reviewId = "fake-new-${System.currentTimeMillis()}",
+                        authorName = "新規ユーザー",
+                        starRating = 2,
+                        text = "アップデートしたら動作が重くなりました。改善をお願いします。",
+                        lastModifiedEpochSec = System.currentTimeMillis() / 1000,
+                        appVersionName = "2.1.0",
+                        androidOsVersion = 14,
+                        deviceManufacturer = "Google",
+                        deviceModel = "Pixel 8",
+                        importance = Importance.MID,
+                        reasonTags = setOf(ReasonTag.UI),
+                        fetchedAtEpochSec = System.currentTimeMillis() / 1000,
+                    )
+                )
+                _reviews.value = current
+                Result.success(SyncSummary(fetchedCount = 1, highCount = 0))
+            }
+            FakeScenario.EMPTY -> {
+                _reviews.value = emptyList()
+                Result.success(SyncSummary(fetchedCount = 0, highCount = 0))
+            }
+            FakeScenario.AUTH_401      -> AppError.AuthExpired.toFailure()
+            FakeScenario.FORBIDDEN_403 -> AppError.Forbidden.toFailure()
+            FakeScenario.NETWORK_ERROR -> AppError.Network.toFailure()
+            FakeScenario.RATE_LIMIT    -> AppError.RateLimited.toFailure()
+        }
     }
 
     override suspend fun getReview(reviewId: String): Review? =
