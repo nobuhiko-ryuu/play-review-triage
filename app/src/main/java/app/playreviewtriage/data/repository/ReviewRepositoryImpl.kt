@@ -68,4 +68,14 @@ class ReviewRepositoryImpl @Inject constructor(
         val thresholdEpochSec = clock.nowEpochSec() - retentionDays * 86400L
         dao.deleteOlderThan(thresholdEpochSec)
     }
+
+    override suspend fun checkAccess(packageName: String): Result<Unit> {
+        return try {
+            val response = service.listReviews(packageName, maxResults = 1)
+            if (response.isSuccessful) Result.success(Unit)
+            else httpCodeToAppError(response.code()).toFailure()
+        } catch (e: IOException) {
+            AppError.Network.toFailure()
+        }
+    }
 }
