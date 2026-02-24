@@ -36,6 +36,8 @@ android {
             initWith(getByName("debug"))
             isMinifyEnabled = false
             matchingFallbacks += listOf("debug")
+            applicationIdSuffix = ".internal"
+            versionNameSuffix = "-internal"
         }
     }
     compileOptions {
