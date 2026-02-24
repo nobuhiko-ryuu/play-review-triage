@@ -88,7 +88,7 @@ Phase 3（統合・品質確認）      🔄 進行中
 
 ### Phase 3 残作業
 - [ ] **DailySyncWorker の動作確認**（WorkManager スケジューリング）
-- [ ] **CI設定**（`.github/workflows/ci.yml`）：Unit test の自動実行
+- [x] **CI設定**（`.github/workflows/ci.yml`）：Unit test の自動実行（push/PR で testDebugUnitTest 実行）
 - [ ] **実 API E2E テスト**（自アプリを Play Console に登録後に実施）
   - 401 / 403 / 404 / ネットワークエラーの各エラー表示確認
 
