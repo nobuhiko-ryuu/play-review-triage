@@ -1,5 +1,5 @@
 # 進捗状況：Play Review Triage
-最終更新: 2026-02-24
+最終更新: 2026-02-25
 プロジェクト: `C:\Users\my\claude_code\Projects\Play Review Triage`
 GitHub: https://github.com/nobuhiko-ryuu/play-review-triage（Public）
 
@@ -72,20 +72,19 @@ Phase 3（統合・品質確認）      🔄 進行中
   - `FakeAuthRepository`：常にサインイン済み・トークン固定
   - `FakeReviewRepository`：HIGH×2・MID×2・LOW×1 の5件をシード、sync()で1件追加
   - `RepositoryModule`：`@Provides` でフラグに応じて Real/Fake を切り替え
-- [x] **認証の実機動作確認**（internalビルドでの全画面確認は未完）
+- [x] **認証の実機動作確認** ✅
   - アカウント選択画面表示 ✅
   - テストユーザー追加後に OAuth 通過 ✅
+- [x] **internal ビルドでの UI 全画面確認**（Fake Data Mode）✅
+  - Setup：バリデーションエラー・正常保存・Today 遷移 ✅
+  - Today：Top3 表示・更新ボタン・空状態・エラー状態 ✅
+  - Detail：レビュー詳細・タグ・デバイス情報・Play Console ボタン ✅
+  - Settings：パッケージ名表示・ログアウトダイアログ ✅
+- [x] **バグ修正**：`FakeReviewRepository` の `androidOsVersion` 型不一致（String→Int）
 
 ---
 
 ## 残タスク
-
-### 即時対応
-- [ ] **internal ビルドでの UI 全画面確認**（Fake Data Mode を使って実施）
-  - Setup：バリデーションエラー表示・正常保存・Today 遷移
-  - Today：Top3 表示・更新ボタン・空状態・エラー状態
-  - Detail：レビュー詳細・タグ・デバイス情報・Play Console ボタン
-  - Settings：パッケージ名表示・ログアウトダイアログ
 
 ### Phase 3 残作業
 - [ ] **DailySyncWorker の動作確認**（WorkManager スケジューリング）
