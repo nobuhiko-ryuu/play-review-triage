@@ -1,5 +1,5 @@
 # 進捗状況：Play Review Triage
-最終更新: 2026-02-25（セッション4）
+最終更新: 2026-02-25（セッション5）
 プロジェクト: `C:\Users\my\claude_code\Projects\Play Review Triage`
 GitHub: https://github.com/nobuhiko-ryuu/play-review-triage（Public）
 
@@ -44,6 +44,19 @@ Phase 3（統合・品質確認）      🔄 進行中
 - **手動補完**：DIモジュール完成・AppNavHost 実スクリーン差し替え・MainViewModel
 
 ### Phase 3（統合・品質確認）— 進行中
+
+#### セッション 5（2026-02-25）
+- [x] **internal 検査モード強化**
+  - `ReviewRepository.checkAccess(packageName)` をドメイン層に追加（Real: listReviews maxResults=1 / Fake: シナリオ応答）
+  - `FakeScenario` enum（SUCCESS / EMPTY / AUTH_401 / FORBIDDEN_403 / NETWORK_ERROR / RATE_LIMIT）を `src/internal/` に追加
+  - `InternalTestStore`（DataStore）でシナリオを永続化
+  - `FakeReviewRepository` をシナリオ駆動に改修（checkAccess / syncNow がシナリオに応じて成功/失敗/空を返す）
+  - `SetPackageNameUseCase`：形式チェック → checkAccess → 成功なら保存（失敗なら保存しない）
+  - `SetupViewModel`：401/403/Network/RateLimit/Unknown を個別メッセージで表示
+  - `InspectionPanel`：ソースセット分割（main=no-op / internal=シナリオ切替UI）、Settings画面に組み込み
+  - `GetTop3UseCaseTest`：checkAccess を mock に追加（コンパイルエラー修正）
+  - 全3バリアント（assembleInternal / Debug / Release）+ testDebugUnitTest 全成功
+- [x] **internal ビルドを端末に共存インストール可能化**（applicationIdSuffix / versionNameSuffix）
 
 #### セッション 4（2026-02-25）
 - [x] **P0: NetworkModule ログ漏洩対策**
