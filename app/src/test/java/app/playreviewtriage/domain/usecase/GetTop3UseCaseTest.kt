@@ -28,6 +28,7 @@ class GetTop3UseCaseTest {
             )
             override suspend fun getReview(reviewId: String): Review? = null
             override suspend fun deleteExpired(retentionDays: Int) {}
+            override suspend fun checkAccess(packageName: String) = Result.success(Unit)
         }
         useCase = GetTop3UseCase(fakeRepository)
     }
