@@ -1,5 +1,5 @@
 # 進捗状況：Play Review Triage
-最終更新: 2026-02-25
+最終更新: 2026-02-25（セッション4）
 プロジェクト: `C:\Users\my\claude_code\Projects\Play Review Triage`
 GitHub: https://github.com/nobuhiko-ryuu/play-review-triage（Public）
 
@@ -44,6 +44,18 @@ Phase 3（統合・品質確認）      🔄 進行中
 - **手動補完**：DIモジュール完成・AppNavHost 実スクリーン差し替え・MainViewModel
 
 ### Phase 3（統合・品質確認）— 進行中
+
+#### セッション 4（2026-02-25）
+- [x] **P0: NetworkModule ログ漏洩対策**
+  - `HttpLoggingInterceptor` を `BuildConfig.DEBUG` のときのみ有効化
+  - `redactHeader("Authorization")` 設定 → Bearer トークンがログに出ない
+  - レベルを `BODY` → `HEADERS` に変更 → レビュー本文がログに出ない
+- [x] **P1: Fake 実装を src/internal ソースセットへ隔離**
+  - `FakeAuthRepository` / `FakeReviewRepository` を `src/main/` から `src/internal/` へ移動
+  - Hilt Module をソースセット別に分割（RepositoryBindingsModule は main / RepositoryImplModule は debug・release・internal それぞれ独立）
+  - 旧 `RepositoryModule.kt`（BuildConfig 分岐）を削除
+  - `BuildConfig.USE_FAKE_DATA` を全 buildType から削除（ソースセット分割で不要に）
+- [x] **全 buildType ビルド確認**：assembleInternal / assembleDebug / assembleRelease / testDebugUnitTest 全て成功
 
 #### セッション 3（2026-02-23〜24）
 - [x] **Google Sign-In 実装**（`play-services-auth 21.3.0`）
