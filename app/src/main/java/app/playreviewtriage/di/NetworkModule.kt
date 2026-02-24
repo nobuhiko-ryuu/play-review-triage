@@ -1,5 +1,6 @@
 package app.playreviewtriage.di
 
+import app.playreviewtriage.BuildConfig
 import app.playreviewtriage.data.api.interceptor.AuthInterceptor
 import app.playreviewtriage.data.api.service.PublisherService
 import dagger.Module
@@ -20,13 +21,21 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient =
-        OkHttpClient.Builder()
+    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
+        val builder = OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })
-            .build()
+
+        if (BuildConfig.DEBUG) {
+            builder.addInterceptor(
+                HttpLoggingInterceptor().apply {
+                    redactHeader("Authorization")
+                    level = HttpLoggingInterceptor.Level.HEADERS
+                }
+            )
+        }
+
+        return builder.build()
+    }
 
     @Provides
     @Singleton
