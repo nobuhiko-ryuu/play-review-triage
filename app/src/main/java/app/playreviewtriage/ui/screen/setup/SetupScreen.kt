@@ -54,16 +54,16 @@ fun SetupScreen(
         }
 
         if (uiState is SetupUiState.ApiError) {
+            val apiError = uiState as SetupUiState.ApiError
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("権限がありません", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.error)
+                    Text(apiError.title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.height(4.dp))
-                    Text(
-                        (uiState as SetupUiState.ApiError).message,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    TextButton(onClick = onLogout) { Text("ログアウト") }
+                    Text(apiError.message, style = MaterialTheme.typography.bodySmall)
+                    if (apiError.showLogout) {
+                        Spacer(Modifier.height(8.dp))
+                        TextButton(onClick = onLogout) { Text("ログアウト") }
+                    }
                 }
             }
             Spacer(Modifier.height(8.dp))

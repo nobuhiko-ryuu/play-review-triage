@@ -73,6 +73,9 @@ jobs:
           }
           EOF
 
+      - name: Ensure gradlew is executable
+        run: chmod +x ./gradlew
+
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest --build-cache --parallel --quiet
 

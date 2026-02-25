@@ -5,5 +5,9 @@ sealed class SetupUiState {
     data object Loading : SetupUiState()
     data object Success : SetupUiState()
     data class ValidationError(val message: String) : SetupUiState()
-    data class ApiError(val message: String) : SetupUiState()
+    data class ApiError(
+        val title: String,
+        val message: String,
+        val showLogout: Boolean,
+    ) : SetupUiState()
 }
