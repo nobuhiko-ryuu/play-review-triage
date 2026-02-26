@@ -1,7 +1,6 @@
 package app.playreviewtriage.ui.screen.settings
 
 import android.Manifest
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -45,21 +44,29 @@ private fun currentNotifState(context: android.content.Context): NotifState {
 }
 
 private fun openNotificationSettings(context: android.content.Context) {
-    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    val fallbackIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.parse("package:${context.packageName}")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    val primaryIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
             putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
     } else {
-        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.parse("package:${context.packageName}")
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        fallbackIntent
     }
+
     try {
-        context.startActivity(intent)
+        context.startActivity(primaryIntent)
     } catch (e: Exception) {
-        Log.w(TAG, "通知設定画面を開けませんでした", e)
+        Log.w(TAG, "通知設定画面を開けませんでした。アプリ詳細画面へフォールバック", e)
+        try {
+            context.startActivity(fallbackIntent)
+        } catch (e2: Exception) {
+            Log.w(TAG, "アプリ詳細画面も開けませんでした", e2)
+        }
     }
 }
 
