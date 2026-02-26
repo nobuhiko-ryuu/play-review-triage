@@ -19,7 +19,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import app.playreviewtriage.data.fake.FakeScenario
 
 @Composable
-fun InspectionPanel(viewModel: InspectionPanelViewModel = hiltViewModel()) {
+fun InspectionPanel() {
+    val viewModel: InspectionPanelViewModel = hiltViewModel()
     val current by viewModel.scenario.collectAsState()
 
     Card(Modifier.fillMaxWidth()) {

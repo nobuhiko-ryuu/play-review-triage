@@ -1,5 +1,5 @@
 # 進捗状況：Play Review Triage
-最終更新: 2026-02-25（セッション5）
+最終更新: 2026-02-25（セッション6）
 プロジェクト: `C:\Users\my\claude_code\Projects\Play Review Triage`
 GitHub: https://github.com/nobuhiko-ryuu/play-review-triage（Public）
 
@@ -44,6 +44,23 @@ Phase 3（統合・品質確認）      🔄 進行中
 - **手動補完**：DIモジュール完成・AppNavHost 実スクリーン差し替え・MainViewModel
 
 ### Phase 3（統合・品質確認）— 進行中
+
+#### セッション 6（2026-02-25）
+- [x] **EMPTY シナリオで再読み込みが無限ローディングになるバグを修正**（TodayViewModel）
+  - 連打ガード：`isSyncing=true` の間は `sync()` を即リターン
+  - 成功時に `isSyncing=false` を確実に反映：`result.fold(onSuccess=...)` で直接 state を書き換え
+  - 成功時は `configFlow.first()` で最新の lastSyncLabel を取得し、`getTop3UseCase.invoke().first()` で top3 を取得して UI を確定
+- [x] **DailySyncWorker 実装完成（日次同期＋条件付き通知）**
+  - `NotificationHelper`：Channel 作成（`daily_review`）・HIGH件数通知・タップで Today 遷移
+  - `App.onCreate()`：`notificationHelper.createChannel()` を呼んで Channel を初期化
+  - `RunDailySyncUseCase`：同期成功後に `reviewsFlow.first()` から HIGH 件数を正確に集計し `SyncSummary.highCount` に返す
+  - `DailySyncWorker`：`NotificationHelper` を注入、`highCount > 0` のときのみ通知
+  - `ScheduleDailySyncUseCase`：`ExistingPeriodicWorkPolicy.KEEP` → `UPDATE` に変更
+  - `SetupViewModel`：Setup 成功後に `scheduleDailySyncUseCase.invoke()` を呼びスケジュール登録
+  - `SettingsScreen`：Android 13+ 向け「通知を許可する」ボタンを追加（未許可時のみ表示）
+- [x] **InspectionPanel が internal ビルドで表示されないバグを修正**
+  - 原因：internal 側 `InspectionPanel(viewModel: ... = hiltViewModel())` のデフォルト引数があっても、JVM クラス解決で main の no-op が優先されていた
+  - 対応：internal 側の引数を削除し、関数内で `val viewModel: InspectionPanelViewModel = hiltViewModel()` として取得する形に変更
 
 #### セッション 5（2026-02-25）
 - [x] **internal 検査モード強化**
@@ -112,7 +129,7 @@ Phase 3（統合・品質確認）      🔄 進行中
 ## 残タスク
 
 ### Phase 3 残作業
-- [ ] **DailySyncWorker の動作確認**（WorkManager スケジューリング）
+- [x] **DailySyncWorker の実装**（WorkManager スケジューリング + 通知）
 - [x] **CI設定**（`.github/workflows/ci.yml`）：Unit test の自動実行（push/PR で testDebugUnitTest 実行）
 - [ ] **実 API E2E テスト**（自アプリを Play Console に登録後に実施）
   - 401 / 403 / 404 / ネットワークエラーの各エラー表示確認

@@ -1,12 +1,19 @@
 package app.playreviewtriage.ui.screen.settings
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.playreviewtriage.presentation.viewmodel.SettingsViewModel
 import app.playreviewtriage.ui.component.InspectionPanel
@@ -20,6 +27,19 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    var notificationGranted by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+                    PackageManager.PERMISSION_GRANTED
+            } else true
+        )
+    }
+    val notifPermLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> notificationGranted = granted }
 
     LaunchedEffect(uiState.message) {
         if (uiState.message != null) viewModel.clearMessage()
@@ -67,6 +87,19 @@ fun SettingsScreen(
                         text = uiState.packageName.ifBlank { "未設定" },
                         style = MaterialTheme.typography.bodyMedium,
                     )
+                }
+            }
+
+            if (!notificationGranted) {
+                OutlinedButton(
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("通知を許可する")
                 }
             }
 

@@ -1,5 +1,6 @@
 package app.playreviewtriage.domain.usecase
 
+import app.playreviewtriage.domain.entity.Importance
 import app.playreviewtriage.domain.entity.SyncSummary
 import app.playreviewtriage.domain.repository.ConfigRepository
 import app.playreviewtriage.domain.repository.ReviewRepository
@@ -22,6 +23,10 @@ class RunDailySyncUseCase @Inject constructor(
 
         if (result.isSuccess) {
             reviewRepository.deleteExpired(config.retentionDays)
+            val fetchedCount = result.getOrDefault(SyncSummary(0, 0)).fetchedCount
+            val highCount = reviewRepository.reviewsFlow.first()
+                .count { it.importance == Importance.HIGH }
+            return Result.success(SyncSummary(fetchedCount = fetchedCount, highCount = highCount))
         }
 
         return result

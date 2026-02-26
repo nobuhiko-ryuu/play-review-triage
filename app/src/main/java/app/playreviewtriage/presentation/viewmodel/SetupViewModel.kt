@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.playreviewtriage.core.result.AppError
 import app.playreviewtriage.core.result.AppException
+import app.playreviewtriage.domain.usecase.ScheduleDailySyncUseCase
 import app.playreviewtriage.domain.usecase.SetPackageNameUseCase
 import app.playreviewtriage.presentation.uistate.SetupUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SetupViewModel @Inject constructor(
     private val setPackageNameUseCase: SetPackageNameUseCase,
+    private val scheduleDailySyncUseCase: ScheduleDailySyncUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<SetupUiState>(SetupUiState.Idle)
@@ -25,6 +27,9 @@ class SetupViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = SetupUiState.Loading
             val result = setPackageNameUseCase.invoke(packageName)
+            if (result.isSuccess) {
+                scheduleDailySyncUseCase.invoke()
+            }
             _uiState.value = result.fold(
                 onSuccess = { SetupUiState.Success },
                 onFailure = { e ->
