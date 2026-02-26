@@ -48,15 +48,17 @@ private fun openNotificationSettings(context: android.content.Context) {
     val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
             putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
     } else {
         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.parse("package:${context.packageName}")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
     }
     try {
         context.startActivity(intent)
-    } catch (e: ActivityNotFoundException) {
+    } catch (e: Exception) {
         Log.w(TAG, "通知設定画面を開けませんでした", e)
     }
 }
