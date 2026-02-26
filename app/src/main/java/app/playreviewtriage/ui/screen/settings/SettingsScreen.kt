@@ -17,10 +17,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import app.playreviewtriage.presentation.viewmodel.SettingsViewModel
 import app.playreviewtriage.ui.component.InspectionPanel
 
@@ -70,6 +73,18 @@ fun SettingsScreen(
 
     val context = LocalContext.current
     var notifState by remember { mutableStateOf(currentNotifState(context)) }
+
+    // OS設定から戻ったときに状態を再評価
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                notifState = currentNotifState(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     val notifPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -141,28 +156,22 @@ fun SettingsScreen(
                         "現在の状態：$stateLabel",
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    when (notifState) {
-                        NotifState.PERMISSION_DENIED -> {
-                            // Android 13+・未許可 → OSダイアログで許可要求
-                            OutlinedButton(
-                                onClick = {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) { Text("通知を許可する") }
-                        }
-                        NotifState.NOTIFICATIONS_OFF, NotifState.ENABLED -> {
-                            // OS設定で通知OFF、または許可済み（「設定を開く」導線を常に提供）
-                            if (notifState == NotifState.NOTIFICATIONS_OFF) {
-                                OutlinedButton(
-                                    onClick = { openNotificationSettings(context) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                ) { Text("通知設定を開く") }
-                            }
-                        }
+                    // Android 13+ かつ未許可 → OSダイアログで許可要求
+                    if (notifState == NotifState.PERMISSION_DENIED) {
+                        OutlinedButton(
+                            onClick = {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text("通知を許可する") }
                     }
+                    // 状態に関わらず常にOS設定への導線を提供
+                    OutlinedButton(
+                        onClick = { openNotificationSettings(context) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("通知設定を開く") }
                 }
             }
 
